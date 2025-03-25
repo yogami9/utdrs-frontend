@@ -49,25 +49,36 @@ apiGateway.interceptors.request.use(
 );
 
 // Authentication service
+// Authentication service
 export const authService = {
   login: async (username: string, password: string) => {
-    // Create URLSearchParams for proper form encoding
-    const formData = new URLSearchParams();
-    formData.append('username', username);
-    formData.append('password', password);
-    
-    const response = await apiGateway.post('/api/v1/auth/login', formData.toString(), {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-    
-    return response.data;
+    try {
+      // Create URLSearchParams for proper form encoding
+      const formData = new URLSearchParams();
+      formData.append('username', username);
+      formData.append('password', password);
+      
+      const response = await apiGateway.post('/api/v1/auth/login', formData.toString(), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Login request failed:', error.response?.status, error.response?.data || error.message);
+      throw error;
+    }
   },
   
   getProfile: async () => {
-    const response = await apiGateway.get('/api/v1/auth/me');
-    return response.data;
+    try {
+      const response = await apiGateway.get('/api/v1/auth/me');
+      return response.data;
+    } catch (error: any) {
+      console.error('Profile request failed:', error.response?.status, error.response?.data || error.message);
+      throw error;
+    }
   },
 };
 
