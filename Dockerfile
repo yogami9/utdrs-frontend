@@ -6,14 +6,11 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies with legacy-peer-deps flag to avoid TypeScript/React-scripts conflict
-RUN npm install --legacy-peer-deps
+# Install dependencies with npm ci for clean, reproducible builds
+RUN npm ci
 
 # Copy all files
 COPY . .
-
-# Fix the ajv dependency issue before building
-RUN npm install ajv@^8.0.0 --legacy-peer-deps
 
 # Build the application
 RUN npm run build
