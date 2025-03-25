@@ -51,11 +51,12 @@ apiGateway.interceptors.request.use(
 // Authentication service
 export const authService = {
   login: async (username: string, password: string) => {
-    const formData = new FormData();
+    // Create URLSearchParams for proper form encoding
+    const formData = new URLSearchParams();
     formData.append('username', username);
     formData.append('password', password);
     
-    const response = await apiGateway.post('/api/v1/auth/login', formData, {
+    const response = await apiGateway.post('/api/v1/auth/login', formData.toString(), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
