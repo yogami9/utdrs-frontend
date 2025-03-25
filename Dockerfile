@@ -12,6 +12,9 @@ RUN npm install --legacy-peer-deps
 # Copy all files
 COPY . .
 
+# Fix the ajv dependency issue before building
+RUN npm install ajv@^8.0.0 --legacy-peer-deps
+
 # Build the application
 RUN npm run build
 
