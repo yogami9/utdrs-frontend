@@ -48,7 +48,18 @@ apiGateway.interceptors.request.use(
   }
 );
 
-// Authentication service
+// Handle token expiration and authentication errors
+apiGateway.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear token on 401 responses
+      localStorage.removeItem('token');
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Authentication service
 export const authService = {
   login: async (username: string, password: string) => {
@@ -58,7 +69,7 @@ export const authService = {
       formData.append('username', username);
       formData.append('password', password);
       
-      const response = await apiGateway.post('/api/v1/auth/login', formData.toString(), {
+      const response = await axios.post(`${API_GATEWAY_URL}/api/v1/auth/login`, formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -66,8 +77,23 @@ export const authService = {
       
       return response.data;
     } catch (error: any) {
-      console.error('Login request failed:', error.response?.status, error.response?.data || error.message);
-      throw error;
+      // Improved error handling with detailed logging
+      console.error('Login failed:', error.response?.status, error.response?.data);
+      
+      // Format a better error message
+      let errorMessage = 'Authentication failed';
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = 'Invalid username or password';
+        } else if (error.response.data?.detail) {
+          errorMessage = error.response.data.detail;
+        }
+      } else if (!error.response) {
+        errorMessage = 'Unable to connect to server';
+      }
+      
+      const enhancedError = new Error(errorMessage);
+      throw enhancedError;
     }
   },
   
@@ -76,10 +102,20 @@ export const authService = {
       const response = await apiGateway.get('/api/v1/auth/me');
       return response.data;
     } catch (error: any) {
-      console.error('Profile request failed:', error.response?.status, error.response?.data || error.message);
+      console.error('Profile request failed:', error.response?.status, error.response?.data);
       throw error;
     }
   },
+  
+  // Helper method to check API health
+  checkApiHealth: async () => {
+    try {
+      const response = await axios.get(`${API_GATEWAY_URL}/api/v1/health`);
+      return { available: true, data: response.data };
+    } catch (error) {
+      return { available: false, error: error };
+    }
+  }
 };
 
 // Alerts service
